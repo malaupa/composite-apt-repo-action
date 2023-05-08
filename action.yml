@@ -1,0 +1,72 @@
+name: "Fetch and deploy"
+description: "Fetch and deploy packages to apt repo"
+inputs:
+  github_token:
+    description: "Github token with commit and push scope"
+    required: true
+  github_repositories:
+    description: "Newline-delimited list of github repositories to search for new release to deploy to apt repo"
+    required: true
+  file_pattern:
+    description: "Pattern to define deb files to include in apt repository"
+  target_os_release:
+    description: "Newline-delimited list of target OS releases"
+    required: true
+  repo_supported_arch:
+    description: "Newline-delimited list of supported architectures"
+    required: true
+  repo_supported_version:
+    description: "Newline-delimited list of supported OS versions"
+    required: true
+  public_key:
+    description: "GPG public key for apt repo"
+    required: false
+  private_key:
+    description: "GPG private key for signing apt repo"
+    required: true
+  key_passphrase:
+    description: "Passphrase of GPG private key"
+    required: false
+  page_branch:
+    description: "Branch of Github pages"
+    required: false
+    default: "gh-pages"
+  repo_folder:
+    description: "Location of APT repo folder relative to root of Github pages"
+    required: false
+    default: "repo"
+runs:
+  using: "composite"
+  steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - id: match
+      name: match releases
+      run: ${{ github.action_path }}/match_releases.sh ${{ inputs.github_repositories }} ${{ inputs.file_pattern }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{inputs.github_token}}
+    - name: deploy releases
+      uses: smeinecke/apt-repo-action@v2.1.4
+      with:
+        file: "*.deb"
+        file_target_version: ${{ inputs.target_os_release }}
+        github_token: ${{ inputs.github_token }}
+        repo_supported_arch: ${{ inputs.repo_supported_arch }}
+        repo_supported_version: ${{ inputs.repo_supported_version }}
+        public_key: ${{ inputs.public_key }}
+        private_key: ${{ inputs.private_key }}
+        key_passphrase: ${{ inputs.key_passphrase }}
+        page_branch: ${{ inputs.page_branch }}
+        repo_folder: ${{ inputs.repo_folder }}
+    - name: Updating files in main branch
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        # use bot user: https://api.github.com/users/github-actions%5Bbot%5D
+        commit_user_name: github-actions[bot]
+        commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        commit_message: update cache files
+        file_pattern: "cache/*"
