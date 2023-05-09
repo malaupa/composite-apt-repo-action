@@ -1,5 +1,5 @@
-name: "Fetch and deploy"
-description: "Fetch and deploy packages to apt repo"
+name: "Download and deploy"
+description: "Download and deploy packages to apt repo"
 inputs:
   github_token:
     description: "Github token with commit and push scope"
@@ -42,9 +42,8 @@ runs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
-    - id: match
-      name: match releases
-      run: ${{ github.action_path }}/match_releases.sh ${{ inputs.github_repositories }} ${{ inputs.file_pattern }}
+    - name: check and download release
+      run: ${{ github.action_path }}/check_and_download.sh ${{ inputs.github_repositories }} ${{ inputs.file_pattern }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{inputs.github_token}}
@@ -61,7 +60,7 @@ runs:
         key_passphrase: ${{ inputs.key_passphrase }}
         page_branch: ${{ inputs.page_branch }}
         repo_folder: ${{ inputs.repo_folder }}
-    - name: Updating files in main branch
+    - name: update and commit cache
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         # use bot user: https://api.github.com/users/github-actions%5Bbot%5D
