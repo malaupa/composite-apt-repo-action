@@ -9,6 +9,7 @@ inputs:
     required: true
   file_pattern:
     description: "Pattern to define deb files to include in apt repository"
+    default: "\\.deb$"
   target_os_release:
     description: "Newline-delimited list of target OS releases"
     required: true
@@ -43,10 +44,8 @@ runs:
       with:
         fetch-depth: 1
     - name: check and download release
-      run: ${{ github.action_path }}/check_and_download.sh ${{ inputs.github_repositories }} ${{ inputs.file_pattern }}
+      run: ${{ github.action_path }}/check_and_download.sh ${{ inputs.github_token }} ${{ inputs.file_pattern }} ${{ inputs.github_repositories }}
       shell: bash
-      env:
-        GITHUB_TOKEN: ${{inputs.github_token}}
     - name: deploy releases
       uses: smeinecke/apt-repo-action@v2.1.4
       with:

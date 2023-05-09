@@ -28,11 +28,12 @@ download_release () {
 # checks repo releases and triggers download of new assets
 check_repo () {
   local repo=$1
-  local pattern=$2
+  local token=$2
+  local pattern=$3
   pattern="${pattern//\\/"\\\\"}"
   local cache_file="$CACHE_DIR/${repo//\//"_"}"
   # fetch releases
-  local response=$(curl -s -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$repo/releases")
+  local response=$(curl -s -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $token" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$repo/releases")
   # read releases
   readarray -t latest_releases < <(echo $response | jq -rc ".[] | select(.prerelease!=true) | {tag_name,assets} | .assets |= (map(select(.browser_download_url | test(\"$pattern\")) | .browser_download_url))")
 
@@ -53,20 +54,18 @@ check_repo () {
 
 # starts process
 main () {
-  local repos=($1)
-  local pattern="\.deb$"
+  local token=$1
+  shift
+  local pattern=$1
+  shift
   
-  if [[ $2 != "" ]]; then
-    pattern=$2
-  fi
-
   if ! [[ -d "$CACHE_DIR" ]]; then
     mkdir $CACHE_DIR
   fi
 
-  for repo in $repos
+  for repo in $@
   do
-    check_repo $repo $pattern
+    check_repo $repo $token $pattern
   done
 
   if [[ $DOWNLOAD_COUNT > 0 ]]; then
@@ -76,4 +75,4 @@ main () {
   fi
 }
 
-main $1 $2
+main $@
