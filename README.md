@@ -1,6 +1,5 @@
 # composite-apt-repo-action
 Action to download released debian packages from other github repositories and provide them in a apt repo through github pages.
-Other github repositories and repository which uses this action should be owned by the same user or organization.
 
 ## Inputs
 ### `github_token`
