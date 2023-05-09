@@ -44,8 +44,10 @@ runs:
       with:
         fetch-depth: 1
     - name: check and download release
-      run: ${{ github.action_path }}/check_and_download.sh ${{ inputs.github_token }} ${{ inputs.file_pattern }} ${{ inputs.github_repositories }}
+      run: ${{ github.action_path }}/check_and_download.sh ${{ inputs.github_token }} ${{ inputs.file_pattern }} $GITHUB_REPOS
       shell: bash
+      env:
+        GITHUB_REPOS: "${{ inputs.github_repositories }}"
     - name: deploy releases
       uses: smeinecke/apt-repo-action@v2.1.4
       with:
