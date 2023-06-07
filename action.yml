@@ -44,9 +44,13 @@ runs:
       with:
         fetch-depth: 1
     - name: check and download release
-      run: ${{ github.action_path }}/check_and_download.sh "${{ inputs.github_token }}" "${{ inputs.file_pattern }}" "${{ inputs.github_repositories }}"
+      id: check_and_download
+      run: ${{ github.action_path }}/check_and_download.sh "${{ inputs.file_pattern }}" "${{ inputs.github_repositories }}"
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
     - name: deploy releases
+      if: steps.check_and_download.outputs.result == 'true'
       uses: smeinecke/apt-repo-action@v2.1.4
       with:
         file: "*.deb"
@@ -60,6 +64,7 @@ runs:
         page_branch: ${{ inputs.page_branch }}
         repo_folder: ${{ inputs.repo_folder }}
     - name: update and commit cache
+      if: steps.check_and_download.outputs.result == 'true'
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         # use bot user: https://api.github.com/users/github-actions%5Bbot%5D
